@@ -2590,7 +2590,7 @@ void systemback::livewrite()
 {
     statustart(), pset(10);
     QStr ldev(ui->livedevices->item(ui->livedevices->currentRow(), 0)->text());
-    bool ismmc(ldev.contains("mmc"));
+    bool ismmc(ldev.contains("mmc") || ldev.contains("nvme"));
 
     auto err([&, ismmc](ushort dlg = 336) {
             if(sb::isdir("/.sblivesystemwrite"))
@@ -5700,7 +5700,7 @@ void systemback::on_partitionsettings_currentItemChanged(QTblWI *crrnt, QTblWI *
             bool mntd(false), mntcheck(false);
             QStr dev(ui->partitionsettings->item(crrnt->row(), 0)->text());
 
-            for(ushort a(crrnt->row() + 1) ; a < ui->partitionsettings->rowCount() && ((type == sb::Extended && ui->partitionsettings->item(a, 0)->text().startsWith(sb::left(dev, dev.contains("mmc") ? 12 : 8)) && sb::like(ui->partitionsettings->item(a, 8)->text().toInt(), {sb::Logical, sb::Emptyspace})) || (type != sb::Extended && ui->partitionsettings->item(a, 0)->text().startsWith(dev))) ; ++a)
+            for(ushort a(crrnt->row() + 1) ; a < ui->partitionsettings->rowCount() && ((type == sb::Extended && ui->partitionsettings->item(a, 0)->text().startsWith(sb::left(dev, dev.contains("mmc") || dev.contains("nvme") ? 12 : 8)) && sb::like(ui->partitionsettings->item(a, 8)->text().toInt(), {sb::Logical, sb::Emptyspace})) || (type != sb::Extended && ui->partitionsettings->item(a, 0)->text().startsWith(dev))) ; ++a)
             {
                 ui->partitionsettings->item(a, 0)->setBackground(QPalette().highlight()),
                 ui->partitionsettings->item(a, 0)->setForeground(QPalette().highlightedText());
@@ -5756,7 +5756,8 @@ void systemback::on_partitionsettings_currentItemChanged(QTblWI *crrnt, QTblWI *
         }
         case sb::Freespace:
         {
-            QStr dev(sb::left(ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text(), ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text().contains("mmc") ? 12 : 8));
+			QStr pText(ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text());
+            QStr dev(sb::left(pText, pText.contains("mmc") || pText.contains("nvme")? 12 : 8));
 
             for(ushort a(0) ; a < ui->partitionsettings->rowCount() && pcnt < 4 ; ++a)
                 if(ui->partitionsettings->item(a, 0)->text().startsWith(dev))
@@ -7527,7 +7528,8 @@ void systemback::on_partitiondelete_clicked()
 void systemback::on_newpartition_clicked()
 {
     busy(), ui->copycover->show();
-    QStr dev(sb::left(ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text(), (ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text().contains("mmc") ? 12 : 8)));
+	QStr pText(ui->partitionsettings->item(ui->partitionsettings->currentRow(), 0)->text());
+    QStr dev(sb::left(pText, pText.contains("mmc") || pText.contains("nvme")? 12 : 8));
     bool msize(ui->partitionsize->value() == ui->partitionsize->maximum());
     ullong start(ui->partitionsettings->item(ui->partitionsettings->currentRow(), 9)->text().toULongLong()), len(msize ? ui->partitionsettings->item(ui->partitionsettings->currentRow(), 10)->text().toULongLong() : ullong(ui->partitionsize->value()) * 1048576);
     uchar type;
